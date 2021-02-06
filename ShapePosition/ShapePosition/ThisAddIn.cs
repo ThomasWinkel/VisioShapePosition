@@ -8,12 +8,17 @@ namespace ShapePosition
     public partial class ThisAddIn
     {
         Visio.Application vApp;
+        double xRulerOrigin;
+        double yRulerOrigin;
 
         public void EditPositionsInExcel()
         {
             Visio.Window win = vApp.ActiveWindow;
             if (win.Type != (short)Visio.VisWinTypes.visDrawing) return;
             if (win.Selection.Count < 1) return;
+
+            xRulerOrigin = vApp.ActivePage.PageSheet.Cells["XRulerOrigin"].Result[Visio.VisUnitCodes.visMillimeters];
+            yRulerOrigin = vApp.ActivePage.PageSheet.Cells["YRulerOrigin"].Result[Visio.VisUnitCodes.visMillimeters];
 
             Excel.Application xlsApp = new Excel.Application();
             Excel.Workbook workbook = xlsApp.Workbooks.Add();
@@ -25,13 +30,13 @@ namespace ShapePosition
             worksheet.Cells[1, 4] = "Y";
             Excel.ListObject listObject = worksheet.ListObjects.Add(Excel.XlListObjectSourceType.xlSrcRange, worksheet.Range[worksheet.Cells[1, 1], worksheet.Cells[1, 4]], null, Excel.XlYesNoGuess.xlYes);
 
-            for(int i = 1; i <= vApp.ActiveWindow.Selection.Count; i++)
+            for (int i = 1; i <= vApp.ActiveWindow.Selection.Count; i++)
             {
                 Visio.Shape shape = vApp.ActiveWindow.Selection[i];
                 worksheet.Cells[i + 1, 1] = shape.ContainingPage.Name;
                 worksheet.Cells[i + 1, 2] = shape.ID;
-                worksheet.Cells[i + 1, 3] = shape.Cells["PinX"].Result[Visio.VisUnitCodes.visMillimeters];
-                worksheet.Cells[i + 1, 4] = shape.Cells["PinY"].Result[Visio.VisUnitCodes.visMillimeters];
+                worksheet.Cells[i + 1, 3] = shape.Cells["PinX"].Result[Visio.VisUnitCodes.visMillimeters] - xRulerOrigin;
+                worksheet.Cells[i + 1, 4] = shape.Cells["PinY"].Result[Visio.VisUnitCodes.visMillimeters] - yRulerOrigin;
             }
 
             worksheet.SelectionChange += new Excel.DocEvents_SelectionChangeEventHandler(Worksheet_SelectionChange);
@@ -46,6 +51,9 @@ namespace ShapePosition
             Visio.Window win = vApp.ActiveWindow;
             if (win.Type != (short)Visio.VisWinTypes.visDrawing) return;
             if (win.Selection.Count < 1) return;
+
+            xRulerOrigin = vApp.ActivePage.PageSheet.Cells["XRulerOrigin"].Result[Visio.VisUnitCodes.visMillimeters];
+            yRulerOrigin = vApp.ActivePage.PageSheet.Cells["YRulerOrigin"].Result[Visio.VisUnitCodes.visMillimeters];
 
             Excel.Application xlsApp = new Excel.Application();
             Excel.Workbook workbook = xlsApp.Workbooks.Add();
@@ -73,8 +81,8 @@ namespace ShapePosition
                     if (double.TryParse(listRow.Range[1, 2].Value2.ToString(), out double posY))
                     {
                         Visio.Shape shape = shapePrimary.Duplicate();
-                        shape.Cells["PinX"].Result[Visio.VisUnitCodes.visMillimeters] = posX;
-                        shape.Cells["PinY"].Result[Visio.VisUnitCodes.visMillimeters] = posY;
+                        shape.Cells["PinX"].Result[Visio.VisUnitCodes.visMillimeters] = posX + xRulerOrigin;
+                        shape.Cells["PinY"].Result[Visio.VisUnitCodes.visMillimeters] = posY + yRulerOrigin;
                     }
                 }
             }
@@ -120,11 +128,11 @@ namespace ShapePosition
                     {
                         if (cell.Column == 3)
                         {
-                            shape.Cells["PinX"].Result[Visio.VisUnitCodes.visMillimeters] = pos;
+                            shape.Cells["PinX"].Result[Visio.VisUnitCodes.visMillimeters] = pos + xRulerOrigin;
                         }
                         else if (cell.Column == 4)
                         {
-                            shape.Cells["PinY"].Result[Visio.VisUnitCodes.visMillimeters] = pos;
+                            shape.Cells["PinY"].Result[Visio.VisUnitCodes.visMillimeters] = pos +yRulerOrigin;
                         }
                     }
                 }
