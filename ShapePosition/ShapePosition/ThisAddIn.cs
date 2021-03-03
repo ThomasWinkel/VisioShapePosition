@@ -46,6 +46,11 @@ namespace ShapePosition
             xlsApp.Visible = true;
         }
 
+        internal void Replace()
+        {
+            Replace replace = new Replace();
+        }
+
         public void DuplicateInExcel()
         {
             Visio.Window win = vApp.ActiveWindow;

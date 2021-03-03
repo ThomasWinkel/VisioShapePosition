@@ -18,5 +18,10 @@ namespace ShapePosition
         {
             Globals.ThisAddIn.DuplicateInExcel();
         }
+
+        private void btnReplace_Click(object sender, RibbonControlEventArgs e)
+        {
+            Globals.ThisAddIn.Replace();
+        }
     }
 }
